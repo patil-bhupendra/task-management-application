@@ -4,21 +4,21 @@ A full-stack Task Management Application built using **React (Vite)**, **Node.js
 
 ---
 
-## 🚀 Features
+## Features
 
-### 🔐 Authentication
+### Authentication
 - Login using email & password
 - JWT-based authentication
 - Protected routes
 
-### 👑 Admin Capabilities
+### Admin Capabilities
 - Login as Admin
 - Create tasks
 - View all tasks
 - Delete tasks
 - Logout
 
-### 👨‍💻 Employee Capabilities
+### Employee Capabilities
 - Login as Employee
 - View only assigned tasks
 - Update task status:
@@ -29,7 +29,7 @@ A full-stack Task Management Application built using **React (Vite)**, **Node.js
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - React.js (Vite)
@@ -75,9 +75,9 @@ task-management-application/
 ```
 
 
-## ⚙️ Setup Instructions
+## Setup Instructions
 
-### 1️⃣ Clone the Repository
+### Clone the Repository
 ```bash
 git clone <your-github-repo-link>
 cd task-management-application
@@ -120,7 +120,7 @@ http://localhost:5173
 ---
 
 ```
-## 🔑 Login Credentials (Seeded Users)
+## Login Credentials (Seeded Users)
 
 ### Admin
 
@@ -132,10 +132,10 @@ http://localhost:5173
 
 - Email: employee@example.com
 
-- Password: Emp@
+- Password: Emp@123
 
 
-## 🔗 API Endpoints
+## API Endpoints
 
 ## Auth
 
@@ -153,7 +153,7 @@ http://localhost:5173
 
 - DELETE /api/tasks/:id (Admin only)
 
-## 🧪 Testing
+## Testing
 
 - APIs tested using Postman
 
