@@ -8,7 +8,7 @@ const seedUsers = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("MongoDB connected");
 
-    await User.deleteMany(); // optional but clean
+    await User.deleteMany(); 
 
     const adminPassword = await bcrypt.hash("Admin@123", 10);
     const empPassword = await bcrypt.hash("Emp@123", 10);

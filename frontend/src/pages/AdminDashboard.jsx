@@ -13,13 +13,13 @@ const AdminDashboard = () => {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 🔐 Logout
+  // Handle admin logout
   const handleLogout = () => {
     logout();
     navigate("/");
   };
 
-  // 📥 Fetch all tasks
+  // Fetch all tasks (Admin access)
   const fetchTasks = async () => {
     try {
       const res = await API.get("/tasks");
@@ -35,7 +35,7 @@ const AdminDashboard = () => {
     fetchTasks();
   }, []);
 
-  // ➕ Create task
+  // Create a new task
   const createTask = async (e) => {
     e.preventDefault();
     setError("");
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // ❌ Delete task
+  // Delete an existing task (Admin only)
   const deleteTask = async (id) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
 
