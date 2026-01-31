@@ -16,7 +16,6 @@ const Login = () => {
     setError("");
 
     try {
-      // 1) Login -> get token
       const loginRes = await API.post("/login", {
         email: email.trim(),
         password: password.trim(),
@@ -27,48 +26,65 @@ const Login = () => {
 
       localStorage.setItem("token", token);
 
-      // 2) Fetch profile -> get user + role
       const profileRes = await API.get("/profile");
       const user = profileRes.data;
 
-      // 3) Store user in context + localStorage
       login({ token, user });
 
-      // 4) Role based redirect
       if (user.role === "admin") navigate("/admin");
       else navigate("/employee");
     } catch (err) {
-      console.log("LOGIN ERROR:", err?.response?.status, err?.response?.data);
-
       setError(err?.response?.data?.message || err.message || "Login failed");
     }
   };
 
   return (
-    <div style={{ padding: 30 }}>
-      <h2>Login</h2>
+    <div className="page">
+      <div className="card">
+        <div className="headerRow">
+          <div>
+            <h2 className="title">Welcome back</h2>
+            <p className="subTitle">Login to manage your tasks</p>
+          </div>
+        </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <div className="alert">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <br /><br />
+        <form className="form" onSubmit={handleSubmit}>
+          <div>
+            <span className="label">Email</span>
+            <input
+              className="input"
+              type="email"
+              placeholder="Enter your Username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+            />
+          </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <br /><br />
+          <div>
+            <span className="label">Password</span>
+            <input
+              className="input"
+              type="password"
+              placeholder="Enter your Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </div>
 
-        <button type="submit">Login</button>
-      </form>
+          <div className="actionsRow">
+            <button className="btn btnPrimary" type="submit">
+              Login
+            </button>
+            <span className="small">
+              Use seeded credentials from README
+            </span>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
