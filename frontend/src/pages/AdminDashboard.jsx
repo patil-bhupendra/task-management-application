@@ -5,9 +5,12 @@ import { AuthContext } from "../auth/AuthContext";
 
 const AdminDashboard = () => {
   const [tasks, setTasks] = useState([]);
+  const [employees, setEmployees] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [assignedUser, setAssignedUser] = useState("");
   const [error, setError] = useState("");
 
   const { logout } = useContext(AuthContext);
@@ -29,8 +32,29 @@ const AdminDashboard = () => {
     }
   };
 
+  // Fetch employees for assigning tasks
+  const fetchEmployees = async () => {
+    try {
+      // Try common endpoint first
+      const res = await API.get("/users?role=employee");
+      setEmployees(res.data || []);
+    } catch (err) {
+      // Fallback: if your backend only provides /users
+      try {
+        const res2 = await API.get("/users");
+        const list = Array.isArray(res2.data) ? res2.data : [];
+        const filtered = list.filter((u) => u.role === "employee");
+        setEmployees(filtered);
+      } catch (e2) {
+        // Not fatal for page load, but task creation needs it
+        setEmployees([]);
+      }
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
+    fetchEmployees();
   }, []);
 
   const createTask = async (e) => {
@@ -42,13 +66,24 @@ const AdminDashboard = () => {
       return;
     }
 
+    if (!assignedUser) {
+      setError("Please assign the task to an employee");
+      return;
+    }
+
     try {
-      await API.post("/tasks", { title: title.trim(), description: description.trim() });
+      await API.post("/tasks", {
+        title: title.trim(),
+        description: description.trim(),
+        assignedUser,
+      });
+
       setTitle("");
       setDescription("");
+      setAssignedUser("");
       fetchTasks();
     } catch (err) {
-      setError("Failed to create task");
+      setError(err?.response?.data?.message || "Failed to create task");
     }
   };
 
@@ -80,7 +115,7 @@ const AdminDashboard = () => {
         <div className="headerRow">
           <div>
             <h2 className="title">Admin Dashboard</h2>
-            <p className="subTitle">Create, review and manage all tasks</p>
+            <p className="subTitle">Create, assign, review and manage all tasks</p>
           </div>
           <button className="btn" onClick={handleLogout}>
             Logout
@@ -116,6 +151,28 @@ const AdminDashboard = () => {
             />
           </div>
 
+          <div>
+            <span className="label">Assign To (Employee)</span>
+            <select
+              className="select"
+              value={assignedUser}
+              onChange={(e) => setAssignedUser(e.target.value)}
+            >
+              <option value="">-- Select Employee --</option>
+              {employees.map((emp) => (
+                <option key={emp._id} value={emp._id}>
+                  {emp.name || emp.email || emp._id}
+                </option>
+              ))}
+            </select>
+
+            {employees.length === 0 && (
+              <p className="small" style={{ marginTop: 8 }}>
+                No employees loaded. Make sure you have a users API (e.g. GET /api/users).
+              </p>
+            )}
+          </div>
+
           <div className="actionsRow">
             <button className="btn btnPrimary" type="submit">
               Create Task
@@ -142,7 +199,17 @@ const AdminDashboard = () => {
                   <div>
                     <h4 className="taskTitle">{task.title}</h4>
                     <p className="taskDesc">{task.description}</p>
+
+                    {task.assignedUser && (
+                      <p className="small" style={{ marginTop: 6 }}>
+                        Assigned to:{" "}
+                        {typeof task.assignedUser === "object"
+                          ? (task.assignedUser.name || task.assignedUser.email || task.assignedUser._id)
+                          : task.assignedUser}
+                      </p>
+                    )}
                   </div>
+
                   <span className={badgeClass(task.status)}>
                     {task.status || "Pending"}
                   </span>
@@ -156,7 +223,6 @@ const AdminDashboard = () => {
                     Delete
                   </button>
 
-                  {/* Optional: show created date if you have timestamps */}
                   {task.createdAt && (
                     <span className="small">
                       Created: {new Date(task.createdAt).toLocaleString()}
