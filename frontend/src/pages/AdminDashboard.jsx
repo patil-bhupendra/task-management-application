@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const fetchEmployees = async () => {
     try {
       // Try common endpoint first
-      const res = await API.get("/users?role=employee");
+      const res = await API.get("/users/employees");
       setEmployees(res.data || []);
     } catch (err) {
       // Fallback: if your backend only provides /users
