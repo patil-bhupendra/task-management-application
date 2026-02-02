@@ -94,7 +94,7 @@ cd backend
 npm install
 ```
 
-Create .env file in backend/
+**Create .env file in backend/**
 
 ```
 PORT=5000
@@ -107,21 +107,21 @@ DB_USER=root
 DB_PASSWORD=your_mysql_password
 ```
 
-Create MySQL Database
+**Create MySQL**
 ```
 CREATE DATABASE task_manager;
 ```
 
-Seed Admin & Employee Users
+**Seed Admin & Employee Users**
 ```
 npm run seed
 ```
 
-Start backend server:
+**Start backend server:**
 ```
 npm run dev
 ```
-Backend will run on:
+**Backend will run on:**
 ```
 http://localhost:5000
 ```
@@ -135,13 +135,13 @@ npm install
 npm run dev
 ```
 
-```
-Frontend will run on:
 
+**Frontend will run on:**
+```
 http://localhost:5173
+```
 ---
 
-```
 ## Login Credentials (Seeded Users)
 
 ### Admin
