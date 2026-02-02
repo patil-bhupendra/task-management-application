@@ -46,7 +46,7 @@ A full-stack Task Management Application built using **React (Vite)**, **Node.js
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 task-management-application/
@@ -108,7 +108,7 @@ npm run dev
 ### Frontend Setup
 
 ```bash
-cd ems-frontend
+cd frontend
 npm install
 npm run dev
 ```
