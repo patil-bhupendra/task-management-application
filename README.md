@@ -1,6 +1,6 @@
 # Task Management Application (Role-Based Access)
 
-A full-stack Task Management Application built using **React (Vite)**, **Node.js**, **Express**, and **MongoDB**, featuring **JWT-based authentication** and **role-based access control** for Admin and Employee users.
+A full-stack **Task Management Application** built using **React (Vite)**, **Node.js**, **Express**, and **MySQL (Sequelize ORM)**, featuring **JWT-based authentication** and **role-based access control** for **Admin** and **Employee** users.
 
 ---
 
@@ -10,10 +10,11 @@ A full-stack Task Management Application built using **React (Vite)**, **Node.js
 - Login using email & password
 - JWT-based authentication
 - Protected routes
+- Role-based access control (Admin / Employee)
 
 ### Admin Capabilities
 - Login as Admin
-- Create tasks
+- Create and assign tasks to employees
 - View all tasks
 - Delete tasks
 - Logout
@@ -35,12 +36,13 @@ A full-stack Task Management Application built using **React (Vite)**, **Node.js
 - React.js (Vite)
 - React Router DOM
 - Axios
+- Context API
 
 ### Backend
 - Node.js
 - Express.js
-- MongoDB
-- Mongoose
+- MySQL
+- Sequelize ORM
 - JWT
 - bcryptjs
 
@@ -57,6 +59,7 @@ task-management-application/
 │ ├── routes/
 │ ├── middleware/
 │ ├── config/
+│ ├── seed.js
 │ ├── server.js
 │ ├── app.js
 │ └── .env.example
@@ -91,17 +94,36 @@ cd backend
 npm install
 ```
 
-Create `.env` file:
+Create .env file in backend/
 
 ```
 PORT=5000
-MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
+
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=task_manager
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+```
+
+Create MySQL Database
+```
+CREATE DATABASE task_manager;
+```
+
+Seed Admin & Employee Users
+```
+npm run seed
 ```
 
 Start backend server:
 ```
 npm run dev
+```
+Backend will run on:
+```
+http://localhost:5000
 ```
 ---
 
@@ -149,26 +171,35 @@ http://localhost:5173
 
 - GET /api/tasks
 
-- PUT /api/tasks/:id (Employee – status update)
+- PUT /api/tasks/:id (Employee – update status only)
 
 - DELETE /api/tasks/:id (Admin only)
+
+## Users
+- GET /api/users/employees (Admin only)
 
 ## Testing
 
 - APIs tested using Postman
 
 - Role-based access verified for Admin and Employee
+  
+- Employee can access only assigned tasks
 
-- Status updates persist after page refresh
+- Unauthorized actions are blocked at API level
+
+- Task status updates persist after refresh
 
 ## Notes
 
-- Employee users can only access tasks assigned to them
+- Admin has full control over task creation, assignment, and deletion
 
-- Admin users have full control over task creation and deletion
+- Employee can update only task status
 
-- Unauthorized actions are blocked at the API level
+- Authorization is enforced at backend middleware
+
+- Clean separation of Admin and Employee responsibilities
 
 ### Author
 
-Developed by Bhupendra Patil
+**Bhupendra Patil**
