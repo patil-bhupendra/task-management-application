@@ -11,9 +11,11 @@ const router = express.Router();
  */
 router.get("/employees", auth, adminOnly, async (req, res) => {
   try {
-    const employees = await User.find({ role: "employee" })
-      .select("_id name email role")
-      .sort({ name: 1 });
+    const employees = await User.findAll({
+      where: { role: "employee" },
+      attributes: ["id", "name", "email", "role"],
+      order: [["name", "ASC"]]
+    });
 
     return res.json(employees);
   } catch (err) {

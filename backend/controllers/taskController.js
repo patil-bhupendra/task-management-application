@@ -1,31 +1,38 @@
-const Task = require("../models/Task");
+const { Task, User } = require("../models");
 
 /**
  * Admin: Create + assign task
- * Required: title, description, assignedUser
+ * Required: title, description, assignedUserId
  */
 exports.createTask = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
+    const { title, description, assignedUserId, status } = req.body;
+
+    if (!title?.trim() || !description?.trim() || !assignedUserId) {
+      return res.status(400).json({
+        message: "title, description and assignedUserId are required"
+      });
     }
 
-    const { title, description, assignedUser, status } = req.body;
-
-    if (!title?.trim() || !description?.trim() || !assignedUser) {
-      return res.status(400).json({
-        message: "title, description and assignedUser are required",
-      });
+    // Ensure assigned user exists
+    const assignedUser = await User.findByPk(assignedUserId);
+    if (!assignedUser) {
+      return res.status(400).json({ message: "Assigned user not found" });
     }
 
     const task = await Task.create({
       title: title.trim(),
       description: description.trim(),
-      assignedUser,
-      status: status || "Pending",
+      assignedUserId: Number(assignedUserId),
+      status: status || "Pending"
     });
 
-    return res.status(201).json(task);
+    // Return with assigned user details
+    const created = await Task.findByPk(task.id, {
+      include: [{ model: User, as: "assignedUser", attributes: ["id", "name", "email", "role"] }]
+    });
+
+    return res.status(201).json(created);
   } catch (err) {
     console.error("createTask error:", err);
     return res.status(500).json({ message: "Failed to create task" });
@@ -38,11 +45,16 @@ exports.createTask = async (req, res) => {
  */
 exports.getTasks = async (req, res) => {
   try {
-    const filter = req.user.role === "admin" ? {} : { assignedUser: req.user._id };
+    const where =
+      req.user.role === "admin"
+        ? {}
+        : { assignedUserId: req.user.id };
 
-    const tasks = await Task.find(filter)
-      .populate("assignedUser", "name email")
-      .sort({ createdAt: -1 });
+    const tasks = await Task.findAll({
+      where,
+      include: [{ model: User, as: "assignedUser", attributes: ["id", "name", "email"] }],
+      order: [["createdAt", "DESC"]]
+    });
 
     return res.json(tasks);
   } catch (err) {
@@ -52,22 +64,23 @@ exports.getTasks = async (req, res) => {
 };
 
 /**
- * Admin: can update title/description/status/assignedUser
+ * Admin: can update title/description/status/assignedUserId
  * Employee: can update ONLY status (and only their assigned task)
  */
 exports.updateTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const taskId = Number(req.params.id);
 
+    const task = await Task.findByPk(taskId);
     if (!task) return res.status(404).json({ message: "Task not found" });
 
     // Employee restrictions
     if (req.user.role === "employee") {
-      const isOwner = task.assignedUser?.toString() === req.user._id.toString();
-      if (!isOwner) return res.status(403).json({ message: "Not allowed" });
+      if (task.assignedUserId !== req.user.id) {
+        return res.status(403).json({ message: "Not allowed" });
+      }
 
       const { status } = req.body;
-
       if (!status) {
         return res.status(400).json({ message: "status is required" });
       }
@@ -75,20 +88,36 @@ exports.updateTask = async (req, res) => {
       task.status = status;
       await task.save();
 
-      return res.json(task);
+      const updated = await Task.findByPk(task.id, {
+        include: [{ model: User, as: "assignedUser", attributes: ["id", "name", "email"] }]
+      });
+
+      return res.json(updated);
     }
 
     // Admin update (allow safe fields only)
     if (req.user.role === "admin") {
-      const { title, description, status, assignedUser } = req.body;
+      const { title, description, status, assignedUserId } = req.body;
 
       if (title !== undefined) task.title = title;
       if (description !== undefined) task.description = description;
       if (status !== undefined) task.status = status;
-      if (assignedUser !== undefined) task.assignedUser = assignedUser;
+
+      if (assignedUserId !== undefined) {
+        const assignedUser = await User.findByPk(assignedUserId);
+        if (!assignedUser) {
+          return res.status(400).json({ message: "Assigned user not found" });
+        }
+        task.assignedUserId = Number(assignedUserId);
+      }
 
       await task.save();
-      return res.json(task);
+
+      const updated = await Task.findByPk(task.id, {
+        include: [{ model: User, as: "assignedUser", attributes: ["id", "name", "email"] }]
+      });
+
+      return res.json(updated);
     }
 
     return res.status(403).json({ message: "Not allowed" });
@@ -103,13 +132,12 @@ exports.updateTask = async (req, res) => {
  */
 exports.deleteTask = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access only" });
-    }
+    const taskId = Number(req.params.id);
 
-    const task = await Task.findByIdAndDelete(req.params.id);
-
+    const task = await Task.findByPk(taskId);
     if (!task) return res.status(404).json({ message: "Task not found" });
+
+    await Task.destroy({ where: { id: taskId } });
 
     return res.json({ message: "Task deleted" });
   } catch (err) {

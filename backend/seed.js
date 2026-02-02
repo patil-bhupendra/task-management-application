@@ -1,19 +1,26 @@
 require("dotenv").config();
-const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const { sequelize } = require("./config/database");
 const User = require("./models/User");
 
-const seedUsers = async () => {
+async function seedUsers() {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB connected");
+    // connect MySQL
+    await sequelize.authenticate();
+    console.log("MySQL connected");
 
-    await User.deleteMany(); 
+    // ensure tables exist
+    await sequelize.sync();
+    console.log("Tables synced");
+
+    // clear existing users (optional)
+    await User.destroy({ where: {} });
+    console.log("Users cleared");
 
     const adminPassword = await bcrypt.hash("Admin@123", 10);
     const empPassword = await bcrypt.hash("Emp@123", 10);
 
-    await User.create([
+    await User.bulkCreate([
       {
         name: "Admin User",
         email: "admin@example.com",
@@ -29,11 +36,14 @@ const seedUsers = async () => {
     ]);
 
     console.log("Users seeded successfully");
-    process.exit();
+    console.log("Admin  -> admin@example.com / Admin@123");
+    console.log("Employee -> employee@example.com / Emp@123");
+
+    process.exit(0);
   } catch (error) {
-    console.error(error);
+    console.error("Seed error:", error);
     process.exit(1);
   }
-};
+}
 
 seedUsers();
