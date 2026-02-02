@@ -5,7 +5,6 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import "./styles/ui.css";
 
-
 function App() {
   return (
     <BrowserRouter>

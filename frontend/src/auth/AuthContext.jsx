@@ -7,28 +7,35 @@ const getStoredUser = () => {
     const user = localStorage.getItem("user");
     if (!user || user === "undefined") return null;
     return JSON.parse(user);
-  } catch (error) {
+  } catch {
     return null;
   }
 };
 
+const getStoredToken = () => {
+  return localStorage.getItem("token");
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(getStoredUser());
+  const [token, setToken] = useState(getStoredToken());
 
-  const login = (data) => {
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    setUser(data.user);
+  const login = ({ token, user }) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+    setToken(token);
+    setUser(user);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

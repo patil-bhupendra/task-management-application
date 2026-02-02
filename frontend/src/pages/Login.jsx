@@ -22,16 +22,23 @@ const Login = () => {
       });
 
       const token = loginRes.data?.token;
+      const userFromLogin = loginRes.data?.user;
+
       if (!token) throw new Error("Token missing from login response");
 
       localStorage.setItem("token", token);
 
-      const profileRes = await API.get("/profile");
-      const user = profileRes.data;
+      // If backend returns user in /login, use it.
+      // Otherwise fallback to /profile.
+      let user = userFromLogin;
+      if (!user) {
+        const profileRes = await API.get("/profile");
+        user = profileRes.data;
+      }
 
       login({ token, user });
 
-      if (user.role === "admin") navigate("/admin");
+      if (user?.role === "admin") navigate("/admin");
       else navigate("/employee");
     } catch (err) {
       setError(err?.response?.data?.message || err.message || "Login failed");
@@ -56,7 +63,7 @@ const Login = () => {
             <input
               className="input"
               type="email"
-              placeholder="Enter your Username"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -68,7 +75,7 @@ const Login = () => {
             <input
               className="input"
               type="password"
-              placeholder="Enter your Password"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -79,9 +86,7 @@ const Login = () => {
             <button className="btn btnPrimary" type="submit">
               Login
             </button>
-            <span className="small">
-              Use seeded credentials from README
-            </span>
+            <span className="small">Use seeded credentials from README</span>
           </div>
         </form>
       </div>

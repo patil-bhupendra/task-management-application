@@ -10,7 +10,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [assignedUser, setAssignedUser] = useState("");
+  const [assignedUserId, setAssignedUserId] = useState("");
   const [error, setError] = useState("");
 
   const { logout } = useContext(AuthContext);
@@ -24,7 +24,7 @@ const AdminDashboard = () => {
   const fetchTasks = async () => {
     try {
       const res = await API.get("/tasks");
-      setTasks(res.data);
+      setTasks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setError("Failed to load tasks");
     } finally {
@@ -32,21 +32,17 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch employees for assigning tasks
   const fetchEmployees = async () => {
     try {
-      // Try common endpoint first
       const res = await API.get("/users/employees");
-      setEmployees(res.data || []);
+      setEmployees(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      // Fallback: if your backend only provides /users
+      // fallback if you ever have /users endpoint
       try {
         const res2 = await API.get("/users");
         const list = Array.isArray(res2.data) ? res2.data : [];
-        const filtered = list.filter((u) => u.role === "employee");
-        setEmployees(filtered);
-      } catch (e2) {
-        // Not fatal for page load, but task creation needs it
+        setEmployees(list.filter((u) => u.role === "employee"));
+      } catch {
         setEmployees([]);
       }
     }
@@ -55,6 +51,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchTasks();
     fetchEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const createTask = async (e) => {
@@ -66,7 +63,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (!assignedUser) {
+    if (!assignedUserId) {
       setError("Please assign the task to an employee");
       return;
     }
@@ -75,12 +72,13 @@ const AdminDashboard = () => {
       await API.post("/tasks", {
         title: title.trim(),
         description: description.trim(),
-        assignedUser,
+        assignedUserId: Number(assignedUserId),
+        status: "Pending",
       });
 
       setTitle("");
       setDescription("");
-      setAssignedUser("");
+      setAssignedUserId("");
       fetchTasks();
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to create task");
@@ -95,7 +93,7 @@ const AdminDashboard = () => {
       await API.delete(`/tasks/${id}`);
       fetchTasks();
     } catch (err) {
-      setError("Failed to delete task");
+      setError(err?.response?.data?.message || "Failed to delete task");
     }
   };
 
@@ -155,20 +153,20 @@ const AdminDashboard = () => {
             <span className="label">Assign To (Employee)</span>
             <select
               className="select"
-              value={assignedUser}
-              onChange={(e) => setAssignedUser(e.target.value)}
+              value={assignedUserId}
+              onChange={(e) => setAssignedUserId(e.target.value)}
             >
               <option value="">-- Select Employee --</option>
               {employees.map((emp) => (
-                <option key={emp._id} value={emp._id}>
-                  {emp.name || emp.email || emp._id}
+                <option key={emp.id} value={emp.id}>
+                  {emp.name || emp.email || emp.id}
                 </option>
               ))}
             </select>
 
             {employees.length === 0 && (
               <p className="small" style={{ marginTop: 8 }}>
-                No employees loaded. Make sure you have a users API (e.g. GET /api/users).
+                No employees loaded. Ensure GET /api/users/employees is working (Admin only).
               </p>
             )}
           </div>
@@ -194,7 +192,7 @@ const AdminDashboard = () => {
         ) : (
           <div className="list">
             {tasks.map((task) => (
-              <div key={task._id} className="taskCard">
+              <div key={task.id} className="taskCard">
                 <div className="taskTop">
                   <div>
                     <h4 className="taskTitle">{task.title}</h4>
@@ -203,9 +201,9 @@ const AdminDashboard = () => {
                     {task.assignedUser && (
                       <p className="small" style={{ marginTop: 6 }}>
                         Assigned to:{" "}
-                        {typeof task.assignedUser === "object"
-                          ? (task.assignedUser.name || task.assignedUser.email || task.assignedUser._id)
-                          : task.assignedUser}
+                        {task.assignedUser.name ||
+                          task.assignedUser.email ||
+                          task.assignedUser.id}
                       </p>
                     )}
                   </div>
@@ -218,7 +216,7 @@ const AdminDashboard = () => {
                 <div className="actionsRow">
                   <button
                     className="btn btnDanger"
-                    onClick={() => deleteTask(task._id)}
+                    onClick={() => deleteTask(task.id)}
                   >
                     Delete
                   </button>

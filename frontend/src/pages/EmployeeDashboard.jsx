@@ -20,9 +20,9 @@ const EmployeeDashboard = () => {
     try {
       setError("");
       const res = await API.get("/tasks");
-      setTasks(res.data);
+      setTasks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      setError("Failed to load tasks");
+      setError(err?.response?.data?.message || "Failed to load tasks");
     } finally {
       setLoading(false);
     }
@@ -38,7 +38,7 @@ const EmployeeDashboard = () => {
       await API.put(`/tasks/${id}`, { status });
       fetchTasks();
     } catch (err) {
-      setError("Failed to update status");
+      setError(err?.response?.data?.message || "Failed to update status");
     }
   };
 
@@ -84,7 +84,7 @@ const EmployeeDashboard = () => {
         ) : (
           <div className="list">
             {tasks.map((task) => (
-              <div key={task._id} className="taskCard">
+              <div key={task.id} className="taskCard">
                 <div className="taskTop">
                   <div>
                     <h4 className="taskTitle">{task.title}</h4>
@@ -102,9 +102,7 @@ const EmployeeDashboard = () => {
                     <select
                       className="select"
                       value={task.status || "Pending"}
-                      onChange={(e) =>
-                        updateStatus(task._id, e.target.value)
-                      }
+                      onChange={(e) => updateStatus(task.id, e.target.value)}
                     >
                       <option value="Pending">Pending</option>
                       <option value="In Progress">In Progress</option>
@@ -114,8 +112,7 @@ const EmployeeDashboard = () => {
 
                   {task.updatedAt && (
                     <span className="small">
-                      Updated:{" "}
-                      {new Date(task.updatedAt).toLocaleString()}
+                      Updated: {new Date(task.updatedAt).toLocaleString()}
                     </span>
                   )}
                 </div>
